@@ -28,10 +28,7 @@ export default function ReturnDialog({ invoice, creditedBefore, onClose, onCreat
   const [touched, setTouched] = useState(false)
   const [error, setError] = useState('')
 
-  const returnable = (productId: number) => {
-    const l = invoice.items.find((x) => x.productId === productId)!
-    return l.quantity - l.returnedQuantity
-  }
+
 
   // Estimated value of what is being returned (the server computes the exact figures)
   const rows = invoice.items.map((l) => {

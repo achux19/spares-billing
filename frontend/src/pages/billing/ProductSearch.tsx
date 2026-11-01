@@ -1,7 +1,6 @@
 import { useState, type Ref } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Autocomplete, Box, Chip, InputAdornment, TextField, Typography } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
+import { Autocomplete, Box, Chip, TextField, Typography } from '@mui/material'
 import { api } from '../../api/client'
 import { inr, type PageResponse, type Product } from '../../api/types'
 import { useDebounce } from '../../hooks/useDebounce'

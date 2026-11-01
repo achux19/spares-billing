@@ -6,7 +6,6 @@ const n2 = (n: number | null | undefined) => (n ?? 0).toFixed(2)
 export default function PrintableInvoice({
 inv,
 mode,
-ewayNo,
 }: {
 inv: InvoiceFull
 mode: 'a4' | 'receipt'

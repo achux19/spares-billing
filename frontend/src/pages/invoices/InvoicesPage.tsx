@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
-  Alert, Box, Chip, InputAdornment, MenuItem, Paper, Table, TableBody, TableCell, TableContainer,
+  Alert, Chip, InputAdornment, MenuItem, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TablePagination, TableRow, TextField, Typography,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
