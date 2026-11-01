@@ -146,6 +146,9 @@ export default function Layout() {
             {isOwner && <MenuItem onClick={() => go('/settings')}>Shop settings</MenuItem>}
             {isOwner && <MenuItem onClick={() => go('/users')}>Users</MenuItem>}
             <Divider />
+            <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', py: 0.5 }}>
+             Version {__APP_VERSION__}
+            </Typography>
             <MenuItem onClick={() => { setUserAnchor(null); logout() }}>Log out</MenuItem>
           </Menu>
         </Toolbar>

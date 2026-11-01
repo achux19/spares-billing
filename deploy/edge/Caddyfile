@@ -1,0 +1,17 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy spares-prod-web:80
+}
+
+{$STAGING_DOMAIN} {
+	encode zstd gzip
+	basic_auth {
+		{$STAGING_USER} {$STAGING_HASH}
+	}
+	reverse_proxy spares-staging-web:80
+}

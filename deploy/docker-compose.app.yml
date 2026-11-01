@@ -1,0 +1,59 @@
+# One copy of the app. Run once per stack (prod / staging) with different env files.
+# Always use the scripts in deploy/scripts; they pass -p spares-<stack> and --env-file.
+services:
+  db:
+    image: postgres:16
+    container_name: spares-${STACK}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Kolkata
+      PGTZ: Asia/Kolkata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ../backend
+    image: spares-backend:${VERSION}
+    container_name: spares-${STACK}-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Kolkata
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      INITIAL_OWNER_USERNAME: ${INITIAL_OWNER_USERNAME}
+      INITIAL_OWNER_PASSWORD: ${INITIAL_OWNER_PASSWORD:?INITIAL_OWNER_PASSWORD is required}
+
+  web:
+    build: ../frontend
+    image: spares-web:${VERSION}
+    container_name: spares-${STACK}-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      default: {}
+      edge:
+        aliases:
+          - spares-${STACK}-web
+
+volumes:
+  pgdata:
+
+networks:
+  edge:
+    name: spares-edge
+    external: true

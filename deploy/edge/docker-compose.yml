@@ -1,0 +1,31 @@
+# The one public entrance: Caddy, automatic HTTPS. Start once, rarely touched.
+services:
+  caddy:
+    image: caddy:2
+    container_name: spares-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      STAGING_DOMAIN: ${STAGING_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+      STAGING_USER: ${STAGING_USER}
+      STAGING_HASH: ${STAGING_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  edge:
+    name: spares-edge
+    external: true
