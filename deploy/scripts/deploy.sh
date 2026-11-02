@@ -12,7 +12,7 @@ git rev-parse -q --verify "refs/tags/v$NEW" >/dev/null || { echo "tag v$NEW not 
 OLD=$(getenv VERSION)
 echo "$OLD" > "$BASE/$STACK/previous_version"
 
-if [ "$STACK" = prod ]; then
+if [ "$STACK" = prod ] && docker ps -q -f "name=^spares-prod-db$" | grep -q .; then
   echo "== pre-release backup =="
   "$(dirname "$0")/backup.sh" prod prerelease
 fi
