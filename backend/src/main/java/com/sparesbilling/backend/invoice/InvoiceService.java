@@ -107,7 +107,7 @@ public class InvoiceService {
     @Transactional
     public InvoiceResponse create(InvoiceRequest req) {
         LocalDate today = LocalDate.now(SHOP_ZONE);
-        ShopSettings shop = shopRepository.findById(1)
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NotFoundException("Shop settings not found"));
 
         Set<Long> seen = new HashSet<>();
@@ -320,7 +320,7 @@ public class InvoiceService {
     }
 
     private InvoiceResponse toResponse(Invoice i) {
-        ShopSettings shop = shopRepository.findById(1)
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NotFoundException("Shop settings not found"));
 
         InvoiceResponse.Buyer buyer = null;

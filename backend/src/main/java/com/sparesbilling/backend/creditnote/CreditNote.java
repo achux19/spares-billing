@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.creditnote;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import com.sparesbilling.backend.common.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,7 +23,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CreditNote {
+@EntityListeners(TenantGuardListener.class)
+public class CreditNote implements TenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,4 +82,8 @@ public class CreditNote {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "credit_note_id", nullable = false)
     private List<CreditNoteItem> items = new ArrayList<>();
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

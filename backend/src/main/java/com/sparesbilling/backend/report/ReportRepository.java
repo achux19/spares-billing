@@ -1,5 +1,6 @@
 package com.sparesbilling.backend.report;
 
+import com.sparesbilling.backend.tenant.TenantContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -19,6 +20,7 @@ public class ReportRepository {
     private List<Object[]> rows(String sql, Map<String, Object> params) {
         Query q = em.createNativeQuery(sql);
         params.forEach(q::setParameter);
+        q.setParameter("shopId", TenantContext.requireShopId());
         return q.getResultList();
     }
 
@@ -31,7 +33,7 @@ public class ReportRepository {
                 SELECT invoice_date, COUNT(*), SUM(discount_total), SUM(taxable_amount), SUM(cgst_total),
                        SUM(sgst_total), SUM(igst_total), SUM(round_off), SUM(grand_total), SUM(paid_amount)
                 FROM invoices
-                WHERE status = 'ACTIVE' AND invoice_date BETWEEN :fromDate AND :toDate
+                WHERE shop_id = :shopId AND status = 'ACTIVE' AND invoice_date BETWEEN :fromDate AND :toDate
                 GROUP BY invoice_date ORDER BY invoice_date
                 """, range(from, to));
     }
@@ -40,7 +42,7 @@ public class ReportRepository {
         return rows("""
                 SELECT COUNT(*), COALESCE(SUM(grand_total), 0)
                 FROM invoices
-                WHERE status = 'CANCELLED' AND invoice_date BETWEEN :fromDate AND :toDate
+                WHERE shop_id = :shopId AND status = 'CANCELLED' AND invoice_date BETWEEN :fromDate AND :toDate
                 """, range(from, to));
     }
 
@@ -51,7 +53,7 @@ public class ReportRepository {
                        COALESCE(SUM(sgst_total), 0), COALESCE(SUM(igst_total), 0),
                        COALESCE(SUM(grand_total), 0), COALESCE(SUM(refund_amount), 0)
                 FROM credit_notes
-                WHERE credit_note_date BETWEEN :fromDate AND :toDate
+                WHERE shop_id = :shopId AND credit_note_date BETWEEN :fromDate AND :toDate
                 """, range(from, to));
     }
 
@@ -63,11 +65,11 @@ public class ReportRepository {
                     SELECT ii.gst_rate AS rate, ii.taxable_amount AS taxable, ii.cgst_amount AS cgst,
                            ii.sgst_amount AS sgst, ii.igst_amount AS igst
                     FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
-                    WHERE i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
+                    WHERE i.shop_id = :shopId AND i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
                     UNION ALL
                     SELECT ci.gst_rate, -ci.taxable_amount, -ci.cgst_amount, -ci.sgst_amount, -ci.igst_amount
                     FROM credit_note_items ci JOIN credit_notes cn ON cn.id = ci.credit_note_id
-                    WHERE cn.credit_note_date BETWEEN :fromDate AND :toDate
+                    WHERE cn.shop_id = :shopId AND cn.credit_note_date BETWEEN :fromDate AND :toDate
                 ) t
                 GROUP BY t.rate ORDER BY t.rate
                 """, range(from, to));
@@ -81,12 +83,12 @@ public class ReportRepository {
                            ii.taxable_amount AS taxable, ii.cgst_amount AS cgst, ii.sgst_amount AS sgst,
                            ii.igst_amount AS igst
                     FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
-                    WHERE i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
+                    WHERE i.shop_id = :shopId AND i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
                     UNION ALL
                     SELECT COALESCE(ci.hsn_code, ''), ci.gst_rate, -ci.quantity, -ci.taxable_amount,
                            -ci.cgst_amount, -ci.sgst_amount, -ci.igst_amount
                     FROM credit_note_items ci JOIN credit_notes cn ON cn.id = ci.credit_note_id
-                    WHERE cn.credit_note_date BETWEEN :fromDate AND :toDate
+                    WHERE cn.shop_id = :shopId AND cn.credit_note_date BETWEEN :fromDate AND :toDate
                 ) t
                 GROUP BY t.hsn, t.rate ORDER BY 1, 2
                 """, range(from, to));
@@ -102,7 +104,7 @@ public class ReportRepository {
                 FROM purchase_items pi
                 JOIN purchases p ON p.id = pi.purchase_id
                 JOIN suppliers s ON s.id = p.supplier_id
-                WHERE p.status = 'ACTIVE' AND p.purchase_date BETWEEN :fromDate AND :toDate
+                WHERE p.shop_id = :shopId AND p.status = 'ACTIVE' AND p.purchase_date BETWEEN :fromDate AND :toDate
                 GROUP BY pi.gst_rate, 2 ORDER BY pi.gst_rate
                 """, Map.of("fromDate", from, "toDate", to, "shopState", shopState));
     }
@@ -113,7 +115,7 @@ public class ReportRepository {
                        COALESCE(SUM(p.stock_qty * p.purchase_price), 0),
                        COALESCE(SUM(p.stock_qty * p.selling_price), 0)
                 FROM products p LEFT JOIN categories c ON c.id = p.category_id
-                WHERE p.active = TRUE
+                WHERE p.shop_id = :shopId AND p.active = TRUE
                 GROUP BY COALESCE(c.name, 'Uncategorised') ORDER BY 1
                 """, Map.of());
     }
@@ -122,7 +124,7 @@ public class ReportRepository {
         return rows("""
                 SELECT COUNT(*) FILTER (WHERE stock_qty = 0),
                        COUNT(*) FILTER (WHERE stock_qty > 0 AND stock_qty <= min_stock)
-                FROM products WHERE active = TRUE
+                FROM products WHERE shop_id = :shopId AND active = TRUE
                 """, Map.of());
     }
 
@@ -131,7 +133,7 @@ public class ReportRepository {
         return rows("""
                 SELECT ii.product_id, MAX(ii.description), SUM(ii.quantity) AS qty, SUM(ii.line_total) AS amount
                 FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
-                WHERE i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
+                WHERE i.shop_id = :shopId AND i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
                 GROUP BY ii.product_id ORDER BY\s""" + order + " LIMIT :limit",
                 Map.of("fromDate", from, "toDate", to, "limit", limit));
     }
@@ -148,12 +150,12 @@ public class ReportRepository {
                     SELECT ii.product_id AS product_id, ii.description AS description, ii.quantity AS qty,
                            ii.taxable_amount AS revenue, ii.cost_price * ii.quantity AS cost
                     FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
-                    WHERE i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
+                    WHERE i.shop_id = :shopId AND i.status = 'ACTIVE' AND i.invoice_date BETWEEN :fromDate AND :toDate
                     UNION ALL
                     SELECT ci.product_id, ci.description, -ci.quantity, -ci.taxable_amount,
                            -(CASE WHEN ci.restocked THEN ci.cost_price * ci.quantity ELSE 0 END)
                     FROM credit_note_items ci JOIN credit_notes cn ON cn.id = ci.credit_note_id
-                    WHERE cn.credit_note_date BETWEEN :fromDate AND :toDate
+                    WHERE cn.shop_id = :shopId AND cn.credit_note_date BETWEEN :fromDate AND :toDate
                 ) t
                 JOIN products p ON p.id = t.product_id
                 LEFT JOIN categories c ON c.id = p.category_id

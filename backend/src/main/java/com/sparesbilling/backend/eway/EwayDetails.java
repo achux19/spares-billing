@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.eway;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +19,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EwayDetails {
+@EntityListeners(TenantGuardListener.class)
+public class EwayDetails implements TenantOwned {
 
     @Id
     @Column(name = "invoice_id")
@@ -54,4 +61,8 @@ public class EwayDetails {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

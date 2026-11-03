@@ -26,7 +26,7 @@ export const EMPTY_DRAFT: Draft = {
   method: 'CASH',
 }
 
-const keyFor = (u: string) => `spares_billing_draft_${u}`
+const keyFor = (u: string) => `spares_billing_draft_${u}`   // u = shopCode:username
 
 function load(u: string): Draft {
   try {
@@ -66,7 +66,7 @@ function Inner({ username, children }: { username: string; children: ReactNode }
 // One draft per logged-in user. Changing user starts from that user's own draft.
 export function DraftProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const name = user?.username ?? 'anon'
+  const name = user ? `${user.shopCode ?? 'platform'}:${user.username}` : 'anon'
   return <Inner key={name} username={name}>{children}</Inner>
 }
 

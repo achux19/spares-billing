@@ -2,4 +2,5 @@ package com.sparesbilling.backend.auth;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
+/** shopCode is empty only for the platform Super Admin login. */
+public record LoginRequest(String shopCode, @NotBlank String username, @NotBlank String password) {}

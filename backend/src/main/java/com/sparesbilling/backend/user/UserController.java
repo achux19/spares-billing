@@ -1,6 +1,8 @@
 package com.sparesbilling.backend.user;
 
 import com.sparesbilling.backend.common.NotFoundException;
+import com.sparesbilling.backend.tenant.AppPrincipal;
+import com.sparesbilling.backend.tenant.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -24,17 +26,22 @@ public class UserController {
 
     @GetMapping
     public List<UserResponse> list() {
-        return userRepository.findAll(Sort.by("username")).stream().map(UserResponse::from).toList();
+        return userRepository.findAllByShopId(TenantContext.requireShopId(), Sort.by("username")).stream().map(UserResponse::from).toList();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse create(@Valid @RequestBody CreateUserRequest req) {
         String username = req.username().trim();
-        if (userRepository.existsByUsername(username)) {
+        if (req.role() == Role.SUPER_ADMIN) {
+            throw new IllegalArgumentException("This role cannot be given to a shop user");
+        }
+        long shopId = TenantContext.requireShopId();
+        if (userRepository.existsByShopIdAndUsername(shopId, username)) {
             throw new IllegalArgumentException("Username already exists");
         }
         User u = new User();
+        u.setShopId(shopId);
         u.setUsername(username);
         u.setPasswordHash(passwordEncoder.encode(req.password()));
         u.setFullName(req.fullName().trim());
@@ -47,15 +54,18 @@ public class UserController {
     @Transactional
     public UserResponse update(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest req,
                                Authentication auth) {
+        if (req.role() == Role.SUPER_ADMIN) {
+            throw new IllegalArgumentException("This role cannot be given to a shop user");
+        }
         User u = find(id);
-        boolean self = u.getUsername().equals(auth.getName());
+        boolean self = ((AppPrincipal) auth.getPrincipal()).getUserId().equals(u.getId());
         boolean staysActiveOwner = req.active() && req.role() == Role.OWNER;
         if (self && !staysActiveOwner) {
             throw new IllegalArgumentException("You cannot deactivate yourself or remove your own Owner role");
         }
         boolean wasActiveOwner = u.getRole() == Role.OWNER && u.isActive();
         if (wasActiveOwner && !staysActiveOwner
-                && userRepository.countByRoleAndActive(Role.OWNER, true) <= 1) {
+                && userRepository.countByShopIdAndRoleAndActive(TenantContext.requireShopId(), Role.OWNER, true) <= 1) {
             throw new IllegalArgumentException("The shop must keep at least one active Owner");
         }
         u.setFullName(req.fullName().trim());
@@ -74,6 +84,7 @@ public class UserController {
     }
 
     private User find(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
+        return userRepository.findByIdAndShopId(id, TenantContext.requireShopId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }

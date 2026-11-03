@@ -82,7 +82,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public GstSummary gst(LocalDate from, LocalDate to) {
         DateRange r = range(from, to);
-        ShopSettings shop = shopRepository.findById(1).orElseThrow();
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc().orElseThrow();
 
         List<RateRow> output = new ArrayList<>();
         for (Object[] x : repo.outputByRate(r.from(), r.to())) {

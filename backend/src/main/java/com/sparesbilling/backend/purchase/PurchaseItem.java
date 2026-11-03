@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.purchase;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +18,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PurchaseItem {
+@EntityListeners(TenantGuardListener.class)
+public class PurchaseItem implements TenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,4 +39,8 @@ public class PurchaseItem {
 
     @Column(name = "line_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal lineTotal;
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

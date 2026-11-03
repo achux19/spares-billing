@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.purchase;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +22,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Purchase {
+@EntityListeners(TenantGuardListener.class)
+public class Purchase implements TenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,4 +71,8 @@ public class Purchase {
     public BigDecimal due() {
         return status == PurchaseStatus.CANCELLED ? BigDecimal.ZERO : totalAmount.subtract(paidAmount);
     }
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

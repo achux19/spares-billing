@@ -1,23 +1,18 @@
 package com.sparesbilling.backend.common;
 
-import com.sparesbilling.backend.user.User;
-import com.sparesbilling.backend.user.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.sparesbilling.backend.tenant.AppPrincipal;
+import com.sparesbilling.backend.tenant.TenantContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 //who is logged in right now; used for audit columns and role checks
 @Component
-@RequiredArgsConstructor
 public class CurrentUser {
 
-    private final UserRepository userRepository;
-
     public Long id() {
-        Authentication a = SecurityContextHolder.getContext().getAuthentication();
-        if (a == null) return null;
-        return userRepository.findByUsername(a.getName()).map(User::getId).orElse(null);
+        AppPrincipal p = TenantContext.principal();
+        return p == null ? null : p.getUserId();
     }
 
     public boolean isOwner() {

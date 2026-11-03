@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.stock;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +18,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class StockMovement {
+@EntityListeners(TenantGuardListener.class)
+public class StockMovement implements TenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,4 +52,8 @@ public class StockMovement {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

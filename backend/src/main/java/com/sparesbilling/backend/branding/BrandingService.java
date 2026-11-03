@@ -19,7 +19,13 @@ public class BrandingService {
 
     @Transactional(readOnly = true)
     public Branding find() {
-        return repository.findById(1).orElseThrow(() -> new NotFoundException("Branding not found"));
+        if (!com.sparesbilling.backend.tenant.TenantContext.hasTenant()) {
+            // login page / Super Admin: no shop yet, show the platform default (never another shop's branding)
+            Branding def = new Branding();
+            def.setAppName("Spares Billing");
+            return def;
+        }
+        return repository.findFirstByOrderByIdAsc().orElseThrow(() -> new NotFoundException("Branding not found"));
     }
 
     @Transactional

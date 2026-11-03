@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({BadCredentialsException.class, DisabledException.class})
     public ResponseEntity<Map<String, String>> handleBadLogin(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", "Invalid username or password"));
+                .body(Map.of("message", "Invalid shop code, username or password"));
     }
 
     @ExceptionHandler(InternalAuthenticationServiceException.class)
@@ -34,6 +34,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleAuth(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", "Authentication failed"));
+    }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", String.valueOf(ex.getReason())));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.shop;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +16,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ShopSettings {
+@EntityListeners(TenantGuardListener.class)
+public class ShopSettings implements TenantOwned {
 
     @Id
     private Integer id = 1;
@@ -50,4 +57,8 @@ public class ShopSettings {
 
     @Column(name = "upi_id", length = 100)
     private String upiId;
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

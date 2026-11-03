@@ -25,31 +25,26 @@ public class JwtService {
         this.expirationMinutes = expirationMinutes;
     }
 
-    public String generateToken(String username, String role) {
+    /** shopId is null for the platform Super Admin. */
+    public String generateToken(Long userId, Long shopId, String username, String role) {
         Instant now = Instant.now();
-        return Jwts.builder()
+        var b = Jwts.builder()
                 .subject(username)
+                .claim("uid", userId)
                 .claim("role", role)
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(expirationMinutes, ChronoUnit.MINUTES)))
-                .signWith(key)
-                .compact();
+                .expiration(Date.from(now.plus(expirationMinutes, ChronoUnit.MINUTES)));
+        if (shopId != null) b.claim("sid", shopId);
+        return b.signWith(key).compact();
     }
 
-    public String extractUsername(String token) {
-        return parse(token).getSubject();
-    }
-
-    public boolean isValid(String token) {
+    /** Returns the verified claims, or null when the token is invalid, expired or an old-format token. */
+    public Claims parseOrNull(String token) {
         try {
-            parse(token);
-            return true;
+            Claims c = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+            return c.get("uid") == null ? null : c;
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return null;
         }
-    }
-
-    private Claims parse(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 }

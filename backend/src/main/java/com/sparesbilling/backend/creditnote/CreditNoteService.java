@@ -286,7 +286,7 @@ public class CreditNoteService {
     }
 
     private CreditNoteResponse toResponse(CreditNote c) {
-        ShopSettings shop = shopRepository.findById(1)
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NotFoundException("Shop settings not found"));
         Invoice inv = invoiceRepository.findById(c.getInvoiceId()).orElse(null);
 

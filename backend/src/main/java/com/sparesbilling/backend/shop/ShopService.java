@@ -42,6 +42,6 @@ public class ShopService {
     }
 
     private ShopSettings find() {
-        return repository.findById(1).orElseThrow(() -> new NotFoundException("Shop settings not found"));
+        return repository.findFirstByOrderByIdAsc().orElseThrow(() -> new NotFoundException("Shop settings not found"));
     }
 }

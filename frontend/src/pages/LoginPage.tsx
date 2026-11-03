@@ -7,6 +7,9 @@ import { errorMessage } from '../api/client'
 export default function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
+  const [shopCode, setShopCode] = useState(() => {
+    try { return localStorage.getItem('spares_last_shop') ?? '' } catch { return '' }
+  })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -19,7 +22,8 @@ export default function LoginPage() {
     setError('')
     setBusy(true)
     try {
-      await login(username.trim(), password)
+      await login(shopCode.trim().toLowerCase(), username.trim(), password)
+      try { localStorage.setItem('spares_last_shop', shopCode.trim().toLowerCase()) } catch { /* ignore */ }
       navigate('/', { replace: true })
     } catch (err) {
       setError(errorMessage(err))
@@ -36,12 +40,14 @@ export default function LoginPage() {
           Sign in to continue
         </Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <TextField label="Username" fullWidth autoFocus margin="dense"
+        <TextField label="Shop code" fullWidth autoFocus={!shopCode} margin="dense"
+          value={shopCode} onChange={(e) => setShopCode(e.target.value)} />
+        <TextField label="Username" fullWidth autoFocus={!!shopCode} margin="dense"
           value={username} onChange={(e) => setUsername(e.target.value)} />
         <TextField label="Password" type="password" fullWidth margin="dense"
           value={password} onChange={(e) => setPassword(e.target.value)} />
         <Button type="submit" variant="contained" fullWidth size="large"
-          disabled={busy || !username || !password} sx={{ mt: 2 }}>
+          disabled={busy || !shopCode || !username || !password} sx={{ mt: 2 }}>
           {busy ? 'Signing in…' : 'Sign in'}
         </Button>
       </Paper>

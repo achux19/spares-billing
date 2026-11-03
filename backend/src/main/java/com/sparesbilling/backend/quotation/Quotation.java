@@ -1,5 +1,11 @@
 package com.sparesbilling.backend.quotation;
 
+import com.sparesbilling.backend.tenant.TenantGuardListener;
+import com.sparesbilling.backend.tenant.TenantOwned;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import org.hibernate.annotations.TenantId;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +22,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Quotation {
+@EntityListeners(TenantGuardListener.class)
+public class Quotation implements TenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -102,4 +109,8 @@ public class Quotation {
     @JoinColumn(name = "quotation_id", nullable = false)
     @OrderBy("lineNo ASC")
     private List<QuotationItem> items = new ArrayList<>();
+
+    @TenantId
+    @Column(name = "shop_id", nullable = false, updatable = false)
+    private Long shopId;
 }

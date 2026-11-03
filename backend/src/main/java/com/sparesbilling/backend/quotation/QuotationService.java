@@ -120,7 +120,7 @@ public class QuotationService {
         LocalDate date = req.quotationDate() == null ? today : req.quotationDate();
         int validity = req.validityDays() == null ? 15 : req.validityDays();
 
-        ShopSettings shop = shopRepository.findById(1)
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NotFoundException("Shop settings not found"));
 
         String pos = req.placeOfSupplyState().trim();
@@ -266,7 +266,7 @@ public class QuotationService {
     }
 
     private QuotationResponse toResponse(Quotation q) {
-        ShopSettings shop = shopRepository.findById(1)
+        ShopSettings shop = shopRepository.findFirstByOrderByIdAsc()
                 .orElseThrow(() -> new NotFoundException("Shop settings not found"));
         List<QuotationResponse.Line> lines = q.getItems().stream()
                 .map(i -> new QuotationResponse.Line(i.getLineNo(), i.getProductId(), i.getPartNumber(),
