@@ -9,6 +9,13 @@ cd "$REPO"
 git fetch --tags --quiet
 git rev-parse -q --verify "refs/tags/v$NEW" >/dev/null || { echo "tag v$NEW not found in git" >&2; exit 2; }
 
+# Switch to the new version's files first and run THIS script again from them,
+# so a release always uses its own (newest) deploy script.
+if [ -z "${DEPLOY_REEXEC:-}" ]; then
+  git checkout -q "v$NEW"
+  DEPLOY_REEXEC=1 exec "$REPO/deploy/scripts/deploy.sh" "$@"
+fi
+
 OLD=$(getenv VERSION)
 echo "$OLD" > "$BASE/$STACK/previous_version"
 
@@ -18,7 +25,6 @@ if [ "$STACK" = prod ] && docker ps -q -f "name=^spares-prod-db$" | grep -q .; t
 fi
 
 echo "== building v$NEW =="
-git checkout -q "v$NEW"
 setenv VERSION "$NEW"
 dc up -d --build
 

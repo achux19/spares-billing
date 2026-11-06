@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface InvoiceCounterRepository extends JpaRepository<InvoiceCounter, String> {
+public interface InvoiceCounterRepository extends JpaRepository<InvoiceCounter, com.sparesbilling.backend.tenant.CounterId> {
 
     @Modifying
     @Query(value = "INSERT INTO invoice_counters (shop_id, financial_year, last_number) VALUES (:shopId, :fy, 0) "
@@ -19,6 +19,11 @@ public interface InvoiceCounterRepository extends JpaRepository<InvoiceCounter, 
     }
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select c from InvoiceCounter c where c.financialYear = :fy")
-    Optional<InvoiceCounter> findByIdForUpdate(@Param("fy") String financialYear);
+    @Query("select c from InvoiceCounter c where c.shopId = :shopId and c.financialYear = :fy")
+    Optional<InvoiceCounter> findForUpdate(@Param("shopId") Long shopId, @Param("fy") String financialYear);
+
+    /** This year's counter of the logged-in shop, locked until the transaction ends. */
+    default Optional<InvoiceCounter> findByIdForUpdate(String financialYear) {
+        return findForUpdate(com.sparesbilling.backend.tenant.TenantContext.requireShopId(), financialYear);
+    }
 }

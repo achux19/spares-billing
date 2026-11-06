@@ -16,6 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@IdClass(com.sparesbilling.backend.tenant.CounterId.class)
 @EntityListeners(TenantGuardListener.class)
 public class InvoiceCounter implements TenantOwned {
 
@@ -26,7 +27,8 @@ public class InvoiceCounter implements TenantOwned {
     @Column(name = "last_number", nullable = false)
     private int lastNumber;
 
-    @TenantId
+    /** Part of the key: the counter belongs to one shop, so every update names the shop. */
+    @Id
     @Column(name = "shop_id", nullable = false, updatable = false)
     private Long shopId;
 }

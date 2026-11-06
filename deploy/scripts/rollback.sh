@@ -10,6 +10,9 @@ PREV=$(cat "$PREV_FILE"); CUR=$(getenv VERSION)
 echo "Rolling $STACK back: v$CUR -> v$PREV"
 cd "$REPO"
 git checkout -q "v$PREV"
+if [ -z "${ROLLBACK_REEXEC:-}" ]; then      # continue with the OLD version's own script
+  ROLLBACK_REEXEC=1 exec "$REPO/deploy/scripts/rollback.sh" "$@"
+fi
 setenv VERSION "$PREV"
 dc up -d
 wait_healthy "spares-$STACK-backend" 180 && wait_healthy "spares-$STACK-web" 60 \

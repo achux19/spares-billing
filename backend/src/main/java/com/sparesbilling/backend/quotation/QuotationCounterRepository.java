@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface QuotationCounterRepository extends JpaRepository<QuotationCounter, String> {
+public interface QuotationCounterRepository extends JpaRepository<QuotationCounter, com.sparesbilling.backend.tenant.CounterId> {
 
     @Modifying
     @Query(value = "INSERT INTO quotation_counters (shop_id, financial_year, last_number) VALUES (:shopId, :fy, 0) "
@@ -19,6 +19,11 @@ public interface QuotationCounterRepository extends JpaRepository<QuotationCount
     }
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select c from QuotationCounter c where c.financialYear = :fy")
-    Optional<QuotationCounter> findByIdForUpdate(@Param("fy") String financialYear);
+    @Query("select c from QuotationCounter c where c.shopId = :shopId and c.financialYear = :fy")
+    Optional<QuotationCounter> findForUpdate(@Param("shopId") Long shopId, @Param("fy") String financialYear);
+
+    /** This year's counter of the logged-in shop, locked until the transaction ends. */
+    default Optional<QuotationCounter> findByIdForUpdate(String financialYear) {
+        return findForUpdate(com.sparesbilling.backend.tenant.TenantContext.requireShopId(), financialYear);
+    }
 }
