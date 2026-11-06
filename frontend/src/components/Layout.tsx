@@ -11,9 +11,10 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useAuth } from '../auth/AuthContext'
 import { faviconUrl, useBranding } from '../hooks/useBranding'
 import PasswordGate from './PasswordGate'
+import { useFeatures } from '../hooks/useFeatures'
 
-interface Leaf { label: string; to: string; ownerOnly?: boolean }
-interface Group { label: string; items: Leaf[]; ownerOnly?: boolean }
+interface Leaf { label: string; to: string; ownerOnly?: boolean; feature?: string }
+interface Group { label: string; items: Leaf[]; ownerOnly?: boolean; feature?: string }
 type Entry = Leaf | Group
 const isGroup = (e: Entry): e is Group => 'items' in e
 
@@ -24,8 +25,8 @@ const NAV: Entry[] = [
     items: [
       { label: 'New bill', to: '/billing' },
       { label: 'Invoices', to: '/invoices' },
-      { label: 'Quotations', to: '/quotations' },
-      { label: 'Returns (credit notes)', to: '/credit-notes' },
+      { label: 'Quotations', to: '/quotations', feature: 'QUOTATIONS' },
+      { label: 'Returns (credit notes)', to: '/credit-notes', feature: 'CREDIT_NOTES' },
       { label: 'Payments', to: '/payments' },
     ],
   },
@@ -33,12 +34,12 @@ const NAV: Entry[] = [
     label: 'Stock',
     items: [
       { label: 'Products', to: '/products' },
-      { label: 'Purchases', to: '/purchases', ownerOnly: true },
-      { label: 'Suppliers', to: '/suppliers', ownerOnly: true },
+      { label: 'Purchases', to: '/purchases', ownerOnly: true, feature: 'PURCHASES' },
+      { label: 'Suppliers', to: '/suppliers', ownerOnly: true, feature: 'PURCHASES' },
     ],
   },
   { label: 'Customers', to: '/customers' },
-  { label: 'Reports', to: '/reports', ownerOnly: true },
+  { label: 'Reports', to: '/reports', ownerOnly: true, feature: 'REPORTS' },
 ]
 
 const matches = (pathname: string, to: string) =>
@@ -57,11 +58,11 @@ const navSx = (active: boolean): SxProps<Theme> => ({
   '&:hover': { bgcolor: 'action.hover' },
 })
 
-function NavGroup({ group, pathname }: { group: Group; pathname: string }) {
+function NavGroup({ group, pathname, has }: { group: Group; pathname: string; has: (k?: string) => boolean }) {
   const navigate = useNavigate()
   const { isOwner } = useAuth()
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
-  const items = group.items.filter((i) => !i.ownerOnly || isOwner)
+  const items = group.items.filter((i) => (!i.ownerOnly || isOwner) && has(i.feature))
   if (items.length === 0) return null
   const active = items.some((i) => matches(pathname, i.to))
   return (
@@ -94,7 +95,8 @@ export default function Layout() {
   const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null)
 
   const appName = branding?.appName ?? 'Billing'
-  const visible = NAV.filter((e) => !e.ownerOnly || isOwner)
+  const { has } = useFeatures()
+  const visible = NAV.filter((e) => (!e.ownerOnly || isOwner) && has(e.feature))
   const initial = (user?.username ?? '?').charAt(0).toUpperCase()
   const go = (to: string) => { setDrawer(false); setUserAnchor(null); navigate(to) }
 
@@ -117,7 +119,7 @@ export default function Layout() {
 
           {!mobile && visible.map((e) =>
             isGroup(e) ? (
-              <NavGroup key={e.label} group={e} pathname={pathname} />
+              <NavGroup key={e.label} group={e} pathname={pathname} has={has} />
             ) : (
               <Button key={e.to} color="inherit" component={RouterLink} to={e.to} sx={navSx(matches(pathname, e.to))}>
                 {e.label}
@@ -146,10 +148,10 @@ export default function Layout() {
             {isOwner && <MenuItem onClick={() => go('/settings')}>Shop settings</MenuItem>}
             {isOwner && <MenuItem onClick={() => go('/users')}>Users</MenuItem>}
             <Divider />
-            <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', py: 0.5 }}>
-             Version {__APP_VERSION__}
-            </Typography>
             <MenuItem onClick={() => { setUserAnchor(null); logout() }}>Log out</MenuItem>
+            <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', py: 0.5 }}>
+            Version {__APP_VERSION__}
+            </Typography>
           </Menu>
         </Toolbar>
       </AppBar>
@@ -163,7 +165,7 @@ export default function Layout() {
               isGroup(e) ? (
                 <Box key={e.label}>
                   <ListSubheader sx={{ lineHeight: '32px', mt: 1 }}>{e.label.toUpperCase()}</ListSubheader>
-                  {e.items.filter((i) => !i.ownerOnly || isOwner).map((i) => (
+                  {e.items.filter((i) => (!i.ownerOnly || isOwner) && has(i.feature)).map((i) => (
                     <ListItemButton key={i.to} selected={matches(pathname, i.to)} onClick={() => go(i.to)}>
                       <ListItemText primary={i.label} />
                     </ListItemButton>

@@ -8,6 +8,7 @@ import {
 import { api, errorMessage } from '../../api/client'
 import { inr, type CreditNoteSummary, type InvoiceFull, type PageResponse } from '../../api/types'
 import { useAuth } from '../../auth/AuthContext'
+import { useFeatures } from '../../hooks/useFeatures'
 import { fmtDate } from '../../utils/format'
 import PrintableInvoice from './PrintableInvoice'
 import ReturnDialog from './ReturnDialog'
@@ -19,6 +20,7 @@ import type { EwayDetails } from '../../api/types'
 
 export default function InvoiceDialog({ id, onClose }: { id: number; onClose: () => void }) {
   const { isOwner } = useAuth()
+  const { has } = useFeatures()
   const qc = useQueryClient()
   const [printMode, setPrintMode] = useState<'a4' | 'receipt' | null>(null)
   const [cancelling, setCancelling] = useState(false)
@@ -34,12 +36,13 @@ export default function InvoiceDialog({ id, onClose }: { id: number; onClose: ()
   })
   const eway = useQuery({
     queryKey: ['eway', id],
-    enabled: !!inv,
+    enabled: !!inv && has('EWAY'),
     queryFn: async () => (await api.get<EwayDetails>(`/invoices/${id}/eway`)).data,
   })
 
   const creditNotes = useQuery({
     queryKey: ['credit-notes', 'invoice', id],
+    enabled: has('CREDIT_NOTES'),
     queryFn: async () =>
       (await api.get<PageResponse<CreditNoteSummary>>('/credit-notes', { params: { invoiceId: id, size: 100 } })).data.content,
   })
@@ -199,8 +202,8 @@ export default function InvoiceDialog({ id, onClose }: { id: number; onClose: ()
           {canCancel && !cancelling && (
             <Button color="error" onClick={() => setCancelling(true)} sx={{ mr: 'auto' }}>Cancel invoice</Button>
           )}
-          {canReturn && <Button color="warning" onClick={() => setReturning(true)}>Return items</Button>}
-          {inv && inv.status === 'ACTIVE' && (
+          {canReturn && has('CREDIT_NOTES') && <Button color="warning" onClick={() => setReturning(true)}>Return items</Button>}
+          {inv && inv.status === 'ACTIVE' && has('EWAY') && (
             <Button color={ewayNeeded(inv) ? 'warning' : 'inherit'} variant={ewayNeeded(inv) ? 'outlined' : 'text'}
               onClick={() => setEwayOpen(true)}>
               {eway.data?.ewayBillNo ? 'E-way bill ✓' : ewayNeeded(inv) ? 'E-way bill (needed)' : 'E-way bill'}

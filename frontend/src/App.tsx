@@ -22,6 +22,10 @@ import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import UsersPage from './pages/users/UsersPage'
 import GlobalInputStyles from './components/GlobalInputStyles'
+import AdminRoute from './auth/AdminRoute'
+import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminShopsPage from './pages/admin/AdminShopsPage'
 
 export default function App() {
   return (
@@ -37,23 +41,37 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/billing" element={<BillingPage />} />
                 <Route path="/invoices" element={<InvoicesPage />} />
-                <Route path="/credit-notes" element={<CreditNotesPage />} />
-                <Route path="/quotations" element={<QuotationsPage />} />
-                <Route path="/quotations/new" element={<QuotationFormPage />} />
-                <Route path="/quotations/:id/edit" element={<QuotationFormPage />} />
+                <Route element={<ProtectedRoute feature="CREDIT_NOTES" />}>
+                  <Route path="/credit-notes" element={<CreditNotesPage />} />
+                </Route>
+                <Route element={<ProtectedRoute feature="QUOTATIONS" />}>
+                  <Route path="/quotations" element={<QuotationsPage />} />
+                  <Route path="/quotations/new" element={<QuotationFormPage />} />
+                  <Route path="/quotations/:id/edit" element={<QuotationFormPage />} />
+                </Route>
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/customers" element={<CustomersPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
                 <Route path="/account" element={<AccountPage />} />
 
                 <Route element={<ProtectedRoute ownerOnly />}>
-                  <Route path="/purchases" element={<PurchasesPage />} />
-                  <Route path="/purchases/new" element={<PurchaseEntryPage />} />
-                  <Route path="/suppliers" element={<SuppliersPage />} />
-                  <Route path="/reports" element={<ReportsPage />} />
+                  <Route element={<ProtectedRoute feature="PURCHASES" />}>
+                    <Route path="/purchases" element={<PurchasesPage />} />
+                    <Route path="/purchases/new" element={<PurchaseEntryPage />} />
+                    <Route path="/suppliers" element={<SuppliersPage />} />
+                  </Route>
+                  <Route element={<ProtectedRoute feature="REPORTS" />}>
+                    <Route path="/reports" element={<ReportsPage />} />
+                  </Route>
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/users" element={<UsersPage />} />
                 </Route>
+              </Route>
+            </Route>
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route element={<AdminRoute />}>
+              <Route element={<AdminLayout />}>
+                <Route path="/admin" element={<AdminShopsPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

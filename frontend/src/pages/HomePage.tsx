@@ -4,12 +4,14 @@ import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material'
 import { api, errorMessage } from '../api/client'
 import { inr, type Dashboard } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
+import { useFeatures } from '../hooks/useFeatures'
 import StatCard from '../components/StatCard'
 import { fmtDate } from '../utils/format'
 
 export default function HomePage() {
   const { isOwner, user } = useAuth()
   const navigate = useNavigate()
+  const { has } = useFeatures()
 
   const shop = useQuery({
     queryKey: ['shop'],
@@ -35,7 +37,7 @@ export default function HomePage() {
         <Button variant="contained" size="large" onClick={() => navigate('/billing')}>New bill</Button>
         <Button variant="outlined" size="large" onClick={() => navigate('/payments')}>Receive payment</Button>
         <Button variant="outlined" size="large" onClick={() => navigate('/products')}>Find a part</Button>
-        {isOwner && <Button variant="outlined" size="large" onClick={() => navigate('/purchases/new')}>New purchase</Button>}
+        {isOwner && has('PURCHASES') && <Button variant="outlined" size="large" onClick={() => navigate('/purchases/new')}>New purchase</Button>}
       </Box>
 
       {isOwner && dash.isLoading && <CircularProgress />}
@@ -49,7 +51,8 @@ export default function HomePage() {
           <StatCard label="Customers owe you" value={inr(d.customerDues)}
             color={d.customerDues > 0 ? 'warning.dark' : undefined} onClick={() => navigate('/customers')} />
           <StatCard label="You owe suppliers" value={inr(d.supplierDues)}
-            color={d.supplierDues > 0 ? 'warning.dark' : undefined} onClick={() => navigate('/purchases')} />
+            color={d.supplierDues > 0 ? 'warning.dark' : undefined}
+            onClick={has('PURCHASES') ? () => navigate('/purchases') : undefined} />
           <StatCard label="Low-stock parts" value={String(d.lowStockCount)}
             color={d.lowStockCount > 0 ? 'error.main' : undefined} hint="Out of stock or at/below minimum"
             onClick={() => navigate('/products?low=1')} />
