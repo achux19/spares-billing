@@ -34,6 +34,13 @@ public class ProductController {
         return productService.lowStock();
     }
 
+    @GetMapping("/check-part")
+    public PartCheckResponse checkPart(@RequestParam String partNumber,
+                                       @RequestParam(required = false) Long brandId,
+                                       @RequestParam(required = false) Long excludeId) {
+        return productService.checkPart(partNumber, brandId, excludeId);
+    }
+
     @GetMapping("/{id}")
     public ProductResponse get(@PathVariable Long id) {
         return productService.get(id);

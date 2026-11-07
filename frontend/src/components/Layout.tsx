@@ -36,6 +36,7 @@ const NAV: Entry[] = [
       { label: 'Products', to: '/products' },
       { label: 'Purchases', to: '/purchases', ownerOnly: true, feature: 'PURCHASES' },
       { label: 'Suppliers', to: '/suppliers', ownerOnly: true, feature: 'PURCHASES' },
+      { label: 'Supplier enquiries', to: '/enquiries', ownerOnly: true, feature: 'PURCHASES' },
     ],
   },
   { label: 'Customers', to: '/customers' },

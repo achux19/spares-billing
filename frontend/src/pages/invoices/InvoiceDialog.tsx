@@ -9,6 +9,7 @@ import { api, errorMessage } from '../../api/client'
 import { inr, type CreditNoteSummary, type InvoiceFull, type PageResponse } from '../../api/types'
 import { useAuth } from '../../auth/AuthContext'
 import { useFeatures } from '../../hooks/useFeatures'
+import { pdfName, printAs } from '../../utils/printTitle'
 import { fmtDate } from '../../utils/format'
 import PrintableInvoice from './PrintableInvoice'
 import ReturnDialog from './ReturnDialog'
@@ -51,8 +52,12 @@ export default function InvoiceDialog({ id, onClose }: { id: number; onClose: ()
 
   useEffect(() => {
     if (!printMode) return
-    const t = setTimeout(() => { window.print(); setPrintMode(null) }, 150)
+    const t = setTimeout(() => {
+      printAs(inv ? pdfName(inv.invoiceNo, inv.invoiceDate, inv.customer?.name) : 'Invoice')
+      setPrintMode(null)
+    }, 150)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [printMode])
 
   const cancel = useMutation({

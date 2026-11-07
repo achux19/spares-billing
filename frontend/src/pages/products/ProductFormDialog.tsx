@@ -31,6 +31,7 @@ const makeInitial = (p: Product | null) => ({
   hsnCode: (p?.hsnCode ?? '').replace(/\D/g, ''),
   gstRate: p?.gstRate?.toString() ?? '18',
   listPrice: p?.listPrice?.toString() ?? '',
+  unit: p?.unit ?? 'NOS',
   discount: discountOf(p),
   mrp: p?.mrp?.toString() ?? '',
   purchasePrice: p?.purchasePrice?.toString() ?? '',
@@ -99,6 +100,8 @@ function validate(f: Form, isEdit: boolean): Errors {
 
   if (f.listPrice !== '' && (isNaN(Number(f.listPrice)) || Number(f.listPrice) <= 0))
     e.listPrice = 'List price must be more than 0'
+  else if (f.listPrice !== '' && !/^\d+(\.\d{1,3})?$/.test(f.listPrice.trim()))
+    e.listPrice = 'List price can have at most 3 digits after the point'
   if (f.discount !== '' && (isNaN(Number(f.discount)) || Number(f.discount) < 0 || Number(f.discount) > 100))
     e.discount = 'Discount must be 0 to 100. Is the purchase price higher than the list price?'
 
@@ -122,6 +125,20 @@ export default function ProductFormDialog({ product, brands, categories, onClose
   const [general, setGeneral] = useState<string[]>([])
   // Once you type an MRP yourself (or the part already has one), it is no longer filled in for you
   const [mrpTouched, setMrpTouched] = useState<boolean>(isEdit && !!product?.mrp)
+
+  // Part-number check: runs when you leave the box (or change the brand)
+  const [partWarn, setPartWarn] = useState('')
+  const checkPart = async (pn: string, brandId: string) => {
+    const v = pn.trim()
+    if (!v) { setPartWarn(''); return }
+    try {
+      const { data } = await api.get<{ duplicate: boolean; otherBrand: boolean; otherBrandName: string | null }>(
+        '/products/check-part', { params: { partNumber: v, brandId: brandId || undefined, excludeId: product?.id } })
+      setErrors((cur) => ({ ...cur, partNumber: data.duplicate ? `Part ${v} is already added` : undefined }))
+      setPartWarn(!data.duplicate && data.otherBrand
+        ? `Note: ${v} also exists under ${data.otherBrandName}. Fine if this is a different brand.` : '')
+    } catch { /* the server still refuses a duplicate on Save */ }
+  }
 
   const set = (k: Field) => (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value
@@ -187,6 +204,7 @@ export default function ProductFormDialog({ product, brands, categories, onClose
         purchasePrice: Number(f.purchasePrice),
         sellingPrice: Number(f.sellingPrice),
         listPrice: f.listPrice === '' ? null : Number(f.listPrice),
+        unit: f.unit,
         minStock: Number(f.minStock) || 0,
         rackLocation: f.rackLocation.trim() || null,
         openingStock: isEdit ? null : Number(f.openingStock) || 0,
@@ -219,9 +237,11 @@ export default function ProductFormDialog({ product, brands, categories, onClose
       <DialogContent>
         {general.length > 0 && <Alert severity="error" sx={{ mb: 2 }}>{general.join('. ')}</Alert>}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
-          <TextField label="Part number" autoFocus required {...field('partNumber')} />
+          <TextField label="Part number" autoFocus required {...field('partNumber', partWarn || undefined)}
+            onBlur={() => checkPart(f.partNumber, f.brandId)} />
           <TextField label="Name" required {...field('name')} />
-          <TextField label="Brand" {...dropdown('brandId')}>
+          <TextField label="Brand" {...dropdown('brandId')}
+            onChange={(e) => { set('brandId')(e as React.ChangeEvent<HTMLInputElement>); checkPart(f.partNumber, e.target.value) }}>
             <MenuItem value="">None</MenuItem>
             {brands.map((b) => <MenuItem key={b.id} value={b.id.toString()}>{b.name}</MenuItem>)}
           </TextField>
@@ -238,7 +258,8 @@ export default function ProductFormDialog({ product, brands, categories, onClose
             Type the list price (from the supplier's price list, before GST) and your discount. The purchase price,
             selling price and MRP fill in by themselves. You can still change any box afterwards.
           </Typography>
-          <TextField label="List price (before GST)" type="number" {...field('listPrice', 'Optional. The rate on your quotation')} />
+          <TextField label="List price (before GST)" type="number" slotProps={{ htmlInput: { step: '0.001' } }}
+            {...field('listPrice', 'Optional. Up to 3 digits after the point')} />
           <TextField label="Supplier discount %" type="number" {...field('discount', 'Your discount from the list price')} />
           <TextField label="Purchase price (before GST)" type="number" required
             {...field('purchasePrice', 'What you pay the supplier per piece')} />
@@ -246,6 +267,10 @@ export default function ProductFormDialog({ product, brands, categories, onClose
           <TextField label="MRP" type="number" required {...field('mrp')} />
           <TextField label="Minimum stock (alert level)" type="number" {...field('minStock')} />
           <TextField label="Rack location" {...field('rackLocation')} />
+          <TextField label="Sold in (unit)" {...field('unit', 'Oil and other liquids: LTR')} select>
+            <MenuItem value="NOS">NOS</MenuItem>
+            <MenuItem value="LTR">LTR</MenuItem>
+          </TextField>
           {!isEdit && (
             <TextField label="Opening stock" type="number"
               {...field('openingStock', 'Quantity already on the shelf today')} />

@@ -26,6 +26,7 @@ export interface Product {
   purchasePrice: number | null // null for staff
   sellingPrice: number
   listPrice: number | null
+  unit: 'NOS' | 'LTR'
   stockQty: number
   minStock: number
   rackLocation: string | null
@@ -119,6 +120,7 @@ export interface InvoiceLine {
   hsnCode: string | null
   quantity: number
   unitPrice: number
+  unit?: string
   discountAmount: number
   taxableAmount: number
   gstRate: number
@@ -442,4 +444,27 @@ export interface Branding {
   appName: string
   hasFavicon: boolean
   version: number
+}
+export interface EnquiryLine {
+  productId: number | null
+  partNumber: string | null
+  description: string
+  quantity: number
+  unit: string
+}
+export interface EnquiryFull {
+  id: number
+  enquiryNo: string
+  enquiryDate: string
+  supplierId: number | null
+  supplierName: string | null
+  notes: string | null
+  items: EnquiryLine[]
+}
+export interface EnquirySummary {
+  id: number
+  enquiryNo: string
+  enquiryDate: string
+  supplierName: string | null
+  itemCount: number
 }

@@ -37,6 +37,9 @@ public class InvoiceItem implements TenantOwned {
     @Column(nullable = false)
     private int quantity;
 
+    @Column(nullable = false, length = 10)
+    private String unit = "NOS";
+
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice;                  // GST-inclusive
 

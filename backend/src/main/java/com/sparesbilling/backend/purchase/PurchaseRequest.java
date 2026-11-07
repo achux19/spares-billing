@@ -24,6 +24,6 @@ public record PurchaseRequest(
             @NotNull @DecimalMin("0.0") @Digits(integer = 10, fraction = 2) BigDecimal unitCost,  // excluding GST
             @DecimalMin("0.0") @DecimalMax("40.0") BigDecimal gstRate,
             @DecimalMin("0.01") @Digits(integer = 10, fraction = 2) BigDecimal newSellingPrice,
-            @DecimalMin("0.01") @Digits(integer = 10, fraction = 2) BigDecimal newListPrice
+            @DecimalMin("0.01") @Digits(integer = 10, fraction = 3) BigDecimal newListPrice
     ) {}
 }

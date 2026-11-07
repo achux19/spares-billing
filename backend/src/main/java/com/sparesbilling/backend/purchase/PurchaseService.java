@@ -143,7 +143,7 @@ public class PurchaseService {
                 prod.setSellingPrice(it.newSellingPrice().setScale(2, RoundingMode.HALF_UP));
             }
             if (it.newListPrice() != null) {
-                prod.setListPrice(it.newListPrice().setScale(2, RoundingMode.HALF_UP));
+                prod.setListPrice(it.newListPrice().setScale(3, RoundingMode.HALF_UP));
             }
             if (prod.getSellingPrice().compareTo(prod.getMrp()) > 0) {
                 prod.setMrp(prod.getSellingPrice());   // MRP can never be below the selling price

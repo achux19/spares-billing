@@ -73,6 +73,26 @@ public class ProductService {
         return PageResponse.from(productRepository.findAll(spec, pageable).map(this::toResponse));
     }
 
+    /** Used by the product form when the user leaves the part-number box. */
+    @Transactional(readOnly = true)
+    public PartCheckResponse checkPart(String partNumber, Long brandId, Long excludeId) {
+        if (partNumber == null || partNumber.isBlank()) {
+            return new PartCheckResponse(false, false, null);
+        }
+        boolean duplicate = false;
+        String otherBrand = null;
+        for (Product p : productRepository.findByPartNumberIgnoreCase(partNumber.trim())) {
+            if (excludeId != null && excludeId.equals(p.getId())) continue;
+            Long b = p.getBrand() == null ? null : p.getBrand().getId();
+            if (java.util.Objects.equals(b, brandId)) {
+                duplicate = true;
+            } else if (otherBrand == null) {
+                otherBrand = p.getBrand() == null ? "no brand" : p.getBrand().getName();
+            }
+        }
+        return new PartCheckResponse(duplicate, otherBrand != null, otherBrand);
+    }
+
     @Transactional(readOnly = true)
     public ProductResponse get(Long id) {
         return toResponse(find(id));
@@ -158,6 +178,7 @@ public class ProductService {
         p.setPurchasePrice(req.purchasePrice());
         p.setSellingPrice(req.sellingPrice());
         p.setListPrice(req.listPrice());
+        p.setUnit(req.unit() == null || req.unit().isBlank() ? "NOS" : req.unit());
         p.setMinStock(req.minStock() == null ? 0 : req.minStock());
         p.setRackLocation(blankToNull(req.rackLocation()));
     }

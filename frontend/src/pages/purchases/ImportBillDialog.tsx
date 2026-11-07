@@ -50,7 +50,8 @@ function parse(text: string, m: typeof DEFAULT_MAP, fallbackGst: number): Parsed
     const c = raw.split('\t')
     const at = (i: number) => (i > 0 ? (c[i - 1] ?? '').trim() : '')
     const qty = num(at(m.qty))
-    const list = num(at(m.list))
+    const listRaw = num(at(m.list))
+    const list = Number.isNaN(listRaw) ? listRaw : Math.round(listRaw * 1000) / 1000   // list rate keeps 3 decimals
     if (Number.isNaN(qty) || Number.isNaN(list)) continue        // heading and blank rows are skipped
     const igst = pct(at(m.igst))
     const split = pct(at(m.cgst)) + pct(at(m.sgst))
@@ -256,7 +257,7 @@ export default function ImportBillDialog({
                       <TableCell>{r.existing?.name ?? r.name}</TableCell>
                       <TableCell>{r.hsn}</TableCell>
                       <TableCell align="right">{r.qty}</TableCell>
-                      <TableCell align="right">{inr(r.list)}</TableCell>
+                      <TableCell align="right">{r.list.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}</TableCell>
                       <TableCell align="right">{r.disc}</TableCell>
                       <TableCell align="right">{r.gst}</TableCell>
                       <TableCell align="right">{inr(r2(r.list * (1 - r.disc / 100)))}</TableCell>

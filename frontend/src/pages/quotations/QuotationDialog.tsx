@@ -10,6 +10,7 @@ import { api, errorMessage } from '../../api/client'
 import { inr, type Customer, type Product, type QuotationFull } from '../../api/types'
 import { useAuth } from '../../auth/AuthContext'
 import { useDraft, type Line } from '../../billing/DraftContext'
+import { pdfName, printAs } from '../../utils/printTitle'
 import { fmtDate } from '../../utils/format'
 import { todayIST } from '../../utils/dates'
 import PrintableQuotation from './PrintableQuotation'
@@ -32,8 +33,12 @@ export default function QuotationDialog({ id, onClose }: { id: number; onClose: 
 
   useEffect(() => {
     if (!printing) return
-    const t = setTimeout(() => { window.print(); setPrinting(false) }, 150)
+    const t = setTimeout(() => {
+      printAs(q ? pdfName(q.quotationNo, q.quotationDate, q.buyerName) : 'Quotation')
+      setPrinting(false)
+    }, 150)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [printing])
 
   const cancel = useMutation({

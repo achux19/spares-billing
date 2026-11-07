@@ -17,6 +17,8 @@ import PaymentsPage from './pages/payments/PaymentsPage'
 import AccountPage from './pages/account/AccountPage'
 import PurchasesPage from './pages/purchases/PurchasesPage'
 import PurchaseEntryPage from './pages/purchases/PurchaseEntryPage'
+import EnquiriesPage from './pages/enquiries/EnquiriesPage'
+import EnquiryFormPage from './pages/enquiries/EnquiryFormPage'
 import SuppliersPage from './pages/suppliers/SuppliersPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
@@ -59,6 +61,9 @@ export default function App() {
                     <Route path="/purchases" element={<PurchasesPage />} />
                     <Route path="/purchases/new" element={<PurchaseEntryPage />} />
                     <Route path="/suppliers" element={<SuppliersPage />} />
+                    <Route path="/enquiries" element={<EnquiriesPage />} />
+                    <Route path="/enquiries/new" element={<EnquiryFormPage />} />
+                    <Route path="/enquiries/:id/edit" element={<EnquiryFormPage />} />
                   </Route>
                   <Route element={<ProtectedRoute feature="REPORTS" />}>
                     <Route path="/reports" element={<ReportsPage />} />

@@ -19,5 +19,6 @@ public record ProductRequest(
         @Min(0) Integer minStock,
         @Size(max = 50) String rackLocation,
         @Min(0) Integer openingStock,   // used only when creating
-        @DecimalMin("0.01") @Digits(integer = 10, fraction = 2) BigDecimal listPrice   // optional
+        @DecimalMin("0.01") @Digits(integer = 10, fraction = 3) BigDecimal listPrice,   // optional
+        @Pattern(regexp = "NOS|LTR") String unit               // optional, NOS when empty
 ) {}

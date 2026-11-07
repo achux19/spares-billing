@@ -7,6 +7,7 @@ import {
 } from '@mui/material'
 import { api, errorMessage } from '../../api/client'
 import { inr, type CreditNoteFull } from '../../api/types'
+import { pdfName, printAs } from '../../utils/printTitle'
 import { fmtDate } from '../../utils/format'
 import PrintableCreditNote from './PrintableCreditNote'
 
@@ -20,8 +21,12 @@ export default function CreditNoteDialog({ id, onClose }: { id: number; onClose:
 
   useEffect(() => {
     if (!printMode) return
-    const t = setTimeout(() => { window.print(); setPrintMode(null) }, 150)
+    const t = setTimeout(() => {
+      printAs(cn ? pdfName(cn.creditNoteNo, cn.creditNoteDate, cn.customer?.name) : 'Credit note')
+      setPrintMode(null)
+    }, 150)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [printMode])
 
   const igst = (cn?.igstTotal ?? 0) > 0

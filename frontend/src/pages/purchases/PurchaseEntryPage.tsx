@@ -169,6 +169,8 @@ export default function PurchaseEntryPage() {
     if (!Number.isInteger(q) || q < 1) out.push(`${l.product.partNumber}: quantity must be a whole number, 1 or more`)
     if (l.unitCost === '' || Number(l.unitCost) < 0) out.push(`${l.product.partNumber}: enter the cost price`)
     if (listOf(l) !== '' && Number(listOf(l)) <= 0) out.push(`${l.product.partNumber}: list price must be more than 0`)
+    else if (listOf(l) !== '' && !/^\d+(\.\d{1,3})?$/.test(listOf(l).trim()))
+      out.push(`${l.product.partNumber}: list price can have at most 3 digits after the point`)
     if (discOf(l) !== '' && (Number(discOf(l)) < 0 || Number(discOf(l)) > 100))
       out.push(`${l.product.partNumber}: discount must be 0 to 100`)
     if (l.gst === '' || Number(l.gst) < 0 || Number(l.gst) > 40) out.push(`${l.product.partNumber}: GST must be 0 to 40`)
@@ -191,7 +193,7 @@ export default function PurchaseEntryPage() {
           const sell = Number(sellOf(l))
           const changed = sellOf(l) !== '' && sell > 0 && cents(sell) !== cents(l.product.sellingPrice ?? 0)
           const list = Number(listOf(l))
-          const listChanged = listOf(l) !== '' && list > 0 && cents(list) !== cents(l.product.listPrice ?? 0)
+          const listChanged = listOf(l) !== '' && list > 0 && Math.round(list * 1000) !== Math.round((l.product.listPrice ?? 0) * 1000)
           return {
             productId: l.product.id, quantity: Number(l.qty), unitCost: Number(l.unitCost), gstRate: Number(l.gst),
             ...(changed ? { newSellingPrice: sell } : {}),
@@ -284,7 +286,7 @@ export default function PurchaseEntryPage() {
                           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchRef.current?.focus() } }}
                           slotProps={{ htmlInput: { min: 1, style: { textAlign: 'right' } } }} />
                       </TableCell>
-                      <TableCell align="right">{num('list', listOf(l))}</TableCell>
+                      <TableCell align="right">{num('list', listOf(l), { slotProps: { htmlInput: { min: 0, step: '0.001', style: { textAlign: 'right' } } } })}</TableCell>
                       <TableCell align="right">{num('disc', discOf(l))}</TableCell>
                       <TableCell align="right">{num('unitCost', l.unitCost, { error: l.unitCost === '' })}</TableCell>
                       <TableCell align="right">{num('gst', l.gst)}</TableCell>

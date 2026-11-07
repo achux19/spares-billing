@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem,
   Paper, Radio, RadioGroup, FormControlLabel, Table, TableBody, TableCell, TableHead, TableRow,
-  TextField, Typography,
+  InputAdornment, TextField, Typography,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
+import { RowMover, moveItem, useRowReorder } from '../../components/RowReorder'
 import { api, errorMessage } from '../../api/client'
 import { inr, type Customer, type InvoiceResult, type PayMethod, type Product } from '../../api/types'
 import type { Line, PayMode } from '../../billing/DraftContext'
@@ -118,6 +119,8 @@ export default function BillingPage() {
       if (allPct === '' || Number(allPct) < 0 || Number(allPct) > 100) return
       setLines((prev) => prev.map((l) => withPct(l, { discountPct: allPct })))
     }
+  const reorder = useRowReorder((from, to) => setLines((prev) => moveItem(prev, from, to)))
+
   const removeLine = (id: number) => {
     setLines((prev) => prev.filter((l) => l.product.id !== id))
     searchRef.current?.focus()
@@ -218,6 +221,7 @@ export default function BillingPage() {
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
+                <TableCell sx={{ width: 100 }}>Move</TableCell>
                 <TableCell>#</TableCell>
                 <TableCell>Part</TableCell>
                 <TableCell align="right">Price</TableCell>
@@ -232,7 +236,10 @@ export default function BillingPage() {
               {lines.map((l, i) => {
                 const over = calc[i].qty > l.product.stockQty
                 return (
-                  <TableRow key={l.product.id}>
+                  <TableRow key={l.product.id} {...reorder.rowProps(i)}>
+                    <TableCell sx={{ px: 0.5 }}>
+                      <RowMover index={i} count={lines.length} handleProps={reorder.handleProps(i)} onMove={reorder.onMove} />
+                    </TableCell>
                     <TableCell>{i + 1}</TableCell>
                     <TableCell>
                       <Typography sx={{ fontWeight: 600 }}>{l.product.partNumber}</Typography>
@@ -246,7 +253,8 @@ export default function BillingPage() {
                         inputRef={(el) => { qtyRefs.current[l.product.id] = el }}
                         onChange={(e) => updateLine(l.product.id, { qty: e.target.value })}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchRef.current?.focus() } }}
-                        slotProps={{ htmlInput: { min: 1, style: { textAlign: 'right' } } }} />
+                        slotProps={{ htmlInput: { min: 1, style: { textAlign: 'right' } },
+                          input: { endAdornment: <InputAdornment position="end">{l.product.unit ?? 'NOS'}</InputAdornment> } }} />
                     </TableCell>
                     <TableCell align="right">
                       <TextField size="small" type="number" fullWidth value={l.discountPct ?? ''}
@@ -267,7 +275,7 @@ export default function BillingPage() {
                 )
               })}
               {lines.length === 0 && (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 5, color: 'text.secondary' }}>
                   No items yet. Search for a part above and press Enter.
                 </TableCell></TableRow>
               )}

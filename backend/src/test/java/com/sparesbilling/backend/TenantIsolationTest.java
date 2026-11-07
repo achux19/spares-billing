@@ -382,4 +382,79 @@ class TenantIsolationTest {
         expect(201, b, "shop2 second invoice");
         assertTrue(str(b.body(), "invoiceNo").endsWith("/00002"), str(b.body(), "invoiceNo"));
     }
+
+    // ------------------------------------------------------------------ 1.1.0 additions
+
+    @Test @Order(13)
+    void enquiriesAreNumberedAndIsolatedPerShop() {
+        String body1 = "{\"supplierName\":\"Walk-in Supplier\",\"items\":["
+                + "{\"productId\":" + p1 + ",\"partNumber\":\"ISO-1\",\"description\":\"Shop one oil\",\"quantity\":5,\"unit\":\"LTR\"},"
+                + "{\"description\":\"Custom part\",\"quantity\":2}]}";
+        Resp e1 = call("POST", "/api/enquiries", owner1Tok, body1);
+        expect(201, e1, "shop1 enquiry");
+        long enq1 = num(e1.body(), "id");
+        assertTrue(str(e1.body(), "enquiryNo").endsWith("/00001"), e1.body());
+
+        Resp e2 = call("POST", "/api/enquiries", owner2Tok,
+                "{\"items\":[{\"description\":\"Shop two part\",\"quantity\":1}]}");
+        expect(201, e2, "shop2 enquiry");
+        assertTrue(str(e2.body(), "enquiryNo").endsWith("/00001"), "numbering per shop: " + e2.body());
+        long enq2 = num(e2.body(), "id");
+
+        // the other shop can neither read, change nor delete it
+        refused(call("GET", "/api/enquiries/" + enq1, owner2Tok, null), "read other shop's enquiry");
+        refused(call("PUT", "/api/enquiries/" + enq1, owner2Tok, body1), "edit other shop's enquiry");
+        refused(call("DELETE", "/api/enquiries/" + enq1, owner2Tok, null), "delete other shop's enquiry");
+        assertFalse(call("GET", "/api/enquiries", owner2Tok, null).body().contains("Walk-in Supplier"), "list leaks");
+        // a shop cannot attach another shop's supplier
+        refused(call("POST", "/api/enquiries", owner2Tok,
+                "{\"supplierId\":" + s1 + ",\"items\":[{\"description\":\"x\",\"quantity\":1}]}"), "foreign supplier");
+
+        // edit keeps the number and the order of lines
+        Resp upd = call("PUT", "/api/enquiries/" + enq1, owner1Tok,
+                "{\"items\":[{\"description\":\"Second first\",\"quantity\":1},{\"description\":\"First second\",\"quantity\":3}]}");
+        expect(200, upd, "edit enquiry");
+        assertTrue(upd.body().indexOf("Second first") < upd.body().indexOf("First second"), upd.body());
+        assertTrue(str(upd.body(), "enquiryNo").endsWith("/00001"), upd.body());
+        expect(204, call("DELETE", "/api/enquiries/" + enq2, owner2Tok, null), "delete own enquiry");
+    }
+
+    @Test @Order(14)
+    void unitsListPriceAndPartCheck() {
+        // litre product, 3-decimal list price
+        Resp r = call("POST", "/api/products", owner1Tok,
+                "{\"partNumber\":\"OIL-5W30\",\"name\":\"Engine oil 1L\",\"gstRate\":18,\"mrp\":500,"
+                        + "\"purchasePrice\":300,\"sellingPrice\":450,\"listPrice\":123.456,\"unit\":\"LTR\",\"openingStock\":50}");
+        expect(201, r, "litre product");
+        assertEquals("LTR", str(r.body(), "unit"));
+        assertEquals(0, money(r.body(), "listPrice").compareTo(new BigDecimal("123.456")), r.body());
+        long oil = num(r.body(), "id");
+        refused(call("POST", "/api/products", owner1Tok,
+                "{\"partNumber\":\"BAD-U\",\"name\":\"x\",\"gstRate\":18,\"mrp\":5,\"purchasePrice\":1,"
+                        + "\"sellingPrice\":2,\"unit\":\"KGS\"}"), "unknown unit");
+        refused(call("POST", "/api/products", owner1Tok,
+                "{\"partNumber\":\"BAD-L\",\"name\":\"x\",\"gstRate\":18,\"mrp\":5,\"purchasePrice\":1,"
+                        + "\"sellingPrice\":2,\"listPrice\":1.2345}"), "4 decimals");
+
+        // the bill keeps the product's unit and the order the cashier entered
+        Resp inv = call("POST", "/api/invoices", owner1Tok,
+                "{\"items\":[{\"productId\":" + oil + ",\"quantity\":2},{\"productId\":" + p1 + ",\"quantity\":1}]}");
+        expect(201, inv, "bill with litre line");
+        long invId = num(inv.body(), "id");
+        Resp back = call("GET", "/api/invoices/" + invId, owner1Tok, null);
+        assertTrue(back.body().indexOf("Engine oil") < back.body().indexOf("Shop one oil"), "line order: " + back.body());
+        assertTrue(back.body().contains("\"unit\":\"LTR\""), back.body());
+
+        // duplicate part check
+        Resp dup = call("GET", "/api/products/check-part?partNumber=iso-1", owner1Tok, null);
+        expect(200, dup, "check-part");
+        assertTrue(dup.body().contains("\"duplicate\":true"), dup.body());
+        assertTrue(call("GET", "/api/products/check-part?partNumber=iso-1&excludeId=" + p1, owner1Tok, null)
+                .body().contains("\"duplicate\":false"), "editing itself is not a duplicate");
+        assertTrue(call("GET", "/api/products/check-part?partNumber=NEW-777", owner1Tok, null)
+                .body().contains("\"duplicate\":false"), "new number");
+        // part numbers of another shop do not count
+        assertTrue(call("GET", "/api/products/check-part?partNumber=ISO-1", owner2Tok, null)
+                .body().contains("\"duplicate\":false"), "other shop's part must not count");
+    }
 }

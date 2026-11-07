@@ -86,6 +86,7 @@ public class Invoice implements TenantOwned {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "invoice_id", nullable = false)
+    @OrderBy("id ASC")
     private List<InvoiceItem> items = new ArrayList<>();
 
     @Column(name = "credited_amount", nullable = false, precision = 12, scale = 2)

@@ -58,8 +58,11 @@ public class Product implements TenantOwned {
     @Column(name = "selling_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal sellingPrice;
 
-    @Column(name = "list_price", precision = 12, scale = 2)
+    @Column(name = "list_price", precision = 13, scale = 3)
     private BigDecimal listPrice;
+
+    @Column(nullable = false, length = 10)
+    private String unit = "NOS";
 
     @Column(name = "stock_qty", nullable = false)
     private int stockQty = 0;

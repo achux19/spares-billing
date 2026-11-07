@@ -204,6 +204,7 @@ public class InvoiceService {
             item.setDescription(description);
             item.setHsnCode(p.getHsnCode());
             item.setQuantity(it.quantity());
+            item.setUnit(p.getUnit() == null ? "NOS" : p.getUnit());
             item.setUnitPrice(unitPrice);
             item.setCostPrice(p.getPurchasePrice());
             item.setDiscountAmount(discount);
@@ -342,7 +343,7 @@ public class InvoiceService {
                 .map(x -> new InvoiceResponse.Line(x.getDescription(), x.getHsnCode(), x.getQuantity(),
                         x.getUnitPrice(), x.getDiscountAmount(), x.getTaxableAmount(), x.getGstRate(),
                         x.getCgstAmount(), x.getSgstAmount(), x.getIgstAmount(), x.getLineTotal(),
-                        x.getProductId(), returned.getOrDefault(x.getId(), 0)))
+                        x.getProductId(), returned.getOrDefault(x.getId(), 0), x.getUnit()))
                 .toList();
 
         List<InvoiceResponse.PaymentLine> payments = paymentRepository.findActiveByInvoiceId(i.getId())

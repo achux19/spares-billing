@@ -25,6 +25,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             + "and p.stockQty <= p.minStock order by p.stockQty asc, p.name asc")
     List<Product> findLowStock();
 
+    @EntityGraph(attributePaths = {"brand"})
+    @Query("select p from Product p where lower(p.partNumber) = lower(:partNumber)")
+    List<Product> findByPartNumberIgnoreCase(@Param("partNumber") String partNumber);
+
     /** Locks the row so two people billing the same part at once cannot corrupt stock. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")

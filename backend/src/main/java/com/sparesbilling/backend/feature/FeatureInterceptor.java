@@ -21,7 +21,7 @@ public class FeatureInterceptor implements HandlerInterceptor {
     private record Rule(Pattern path, Feature feature) {}
 
     private static final List<Rule> RULES = List.of(
-            new Rule(Pattern.compile("^/api/(purchases|suppliers)(/.*)?$"), Feature.PURCHASES),
+            new Rule(Pattern.compile("^/api/(purchases|suppliers|enquiries)(/.*)?$"), Feature.PURCHASES),
             new Rule(Pattern.compile("^/api/quotations(/.*)?$"), Feature.QUOTATIONS),
             new Rule(Pattern.compile("^/api/credit-notes(/.*)?$"), Feature.CREDIT_NOTES),
             new Rule(Pattern.compile("^/api/invoices/[^/]+/eway(/.*)?$"), Feature.EWAY),

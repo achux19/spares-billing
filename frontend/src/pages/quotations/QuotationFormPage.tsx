@@ -7,6 +7,7 @@ import {
   TextField, Typography,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
+import { RowMover, moveItem, useRowReorder } from '../../components/RowReorder'
 import { api, errorMessage } from '../../api/client'
 import type { Customer, Product, QuotationFull, StateItem } from '../../api/types'
 import { useAuth } from '../../auth/AuthContext'
@@ -147,7 +148,7 @@ export default function QuotationFormPage() {
   const addProduct = (p: Product) => {
     const line: QL = {
       key: newKey(), productId: p.id, partNumber: p.partNumber, description: p.name, hsnCode: p.hsnCode ?? '',
-      qty: '1', unit: 'NOS', price: quotePrice(p), basePrice: quotePrice(p), discount: allDiscount,
+      qty: '1', unit: p.unit ?? 'NOS', price: quotePrice(p), basePrice: quotePrice(p), discount: allDiscount,
       gst: String(p.gstRate), purchasePrice: p.purchasePrice,
     }
     setD((prev) => ({ ...prev, lines: [...prev.lines, line] }))
@@ -160,6 +161,7 @@ export default function QuotationFormPage() {
     }
     setD((prev) => ({ ...prev, lines: [...prev.lines, line] }))
   }
+  const reorder = useRowReorder((from, to) => setD((prev) => ({ ...prev, lines: moveItem(prev.lines, from, to) })))
   const updateLine = (key: string, patch: Partial<QL>) =>
     setD((prev) => ({ ...prev, lines: prev.lines.map((l) => (l.key === key ? { ...l, ...patch } : l)) }))
   const removeLine = (key: string) => {
@@ -339,14 +341,15 @@ export default function QuotationFormPage() {
       {/* ITEMS */}
       {/* only this box scrolls, so the search box above stays in view */}
       <Paper sx={{ mb: 2, overflow: 'auto', maxHeight: 'calc(100vh - 260px)', minHeight: 260 }}>
-        <Table stickyHeader size="small" sx={{ minWidth: 1250 }}>
+        <Table stickyHeader size="small" sx={{ minWidth: 1350 }}>
           <TableHead>
             <TableRow>
+              <TableCell sx={{ width: 100 }}>Move</TableCell>
               <TableCell>#</TableCell>
               <TableCell>Part</TableCell>
               <TableCell>HSN</TableCell>
               <TableCell align="right" sx={{ width: 100 }}>Qty</TableCell>
-              <TableCell sx={{ width: 80 }}>Unit</TableCell>
+              <TableCell sx={{ width: 90 }}>Unit</TableCell>
               <TableCell align="right" sx={{ width: 150 }}>Price (excl. GST)</TableCell>
               <TableCell align="right" sx={{ width: 100 }}>Disc %</TableCell>
               <TableCell align="right" sx={{ width: 95 }}>GST %</TableCell>
@@ -360,7 +363,10 @@ export default function QuotationFormPage() {
               const t = calcLine(l, intra)
               const margin = t.costC != null && t.taxableC > 0 ? ((t.taxableC - t.costC) / t.taxableC) * 100 : null
               return (
-                <TableRow key={l.key}>
+                <TableRow key={l.key} {...reorder.rowProps(i)}>
+                  <TableCell sx={{ px: 0.5 }}>
+                    <RowMover index={i} count={d.lines.length} handleProps={reorder.handleProps(i)} onMove={reorder.onMove} />
+                  </TableCell>
                   <TableCell>{i + 1}</TableCell>
                   <TableCell sx={{ minWidth: 260 }}>
                     <TextField {...cell} fullWidth placeholder="Part number" value={l.partNumber}
@@ -388,7 +394,11 @@ export default function QuotationFormPage() {
                       slotProps={num({ min: 1 })} />
                   </TableCell>
                   <TableCell>
-                    <TextField {...cell} value={l.unit} onChange={(e) => updateLine(l.key, { unit: e.target.value })} />
+                    <TextField {...cell} select value={l.unit || 'NOS'} onChange={(e) => updateLine(l.key, { unit: e.target.value })}>
+                      <MenuItem value="NOS">NOS</MenuItem>
+                      <MenuItem value="LTR">LTR</MenuItem>
+                      {l.unit && l.unit !== 'NOS' && l.unit !== 'LTR' && <MenuItem value={l.unit}>{l.unit}</MenuItem>}
+                    </TextField>
                   </TableCell>
                   <TableCell align="right">
                     <TextField {...cell} type="number" value={l.price} error={l.price === ''}
@@ -412,7 +422,7 @@ export default function QuotationFormPage() {
               )
             })}
             {d.lines.length === 0 && (
-              <TableRow><TableCell colSpan={11} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+              <TableRow><TableCell colSpan={12} align="center" sx={{ py: 5, color: 'text.secondary' }}>
                 No items yet. Search for a part above and press Enter, or add a custom line.
               </TableCell></TableRow>
             )}

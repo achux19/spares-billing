@@ -10,7 +10,8 @@ public record ProductResponse(
         BigDecimal gstRate, BigDecimal mrp, BigDecimal purchasePrice, BigDecimal sellingPrice,
         int stockQty, int minStock, String rackLocation,
         boolean active, boolean lowStock,
-        BigDecimal listPrice
+        BigDecimal listPrice,
+        String unit
 ) {
     public static ProductResponse from(Product p, boolean showCost) {
         Brand b = p.getBrand();
@@ -26,6 +27,7 @@ public record ProductResponse(
                 p.getStockQty(), p.getMinStock(), p.getRackLocation(),
                 p.isActive(),
                 p.getStockQty() <= p.getMinStock(),
-                p.getListPrice());
+                p.getListPrice(),
+                p.getUnit());
     }
 }
