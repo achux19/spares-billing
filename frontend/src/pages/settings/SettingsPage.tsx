@@ -5,6 +5,7 @@ import { api, errorMessage } from '../../api/client'
 import type { ShopSettings, StateItem } from '../../api/types'
 import { splitServerMessage } from '../../utils/formErrors'
 import BrandingCard from './BrandingCard'
+import LogoCard from './LogoCard'
 
 
 type Form = {
@@ -96,6 +97,7 @@ export default function SettingsPage() {
 
       <Paper sx={{ p: 2, mb: 2, display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
         <BrandingCard />
+        <LogoCard />
         <Typography variant="h6" sx={{ gridColumn: '1 / -1' }}>Shop</Typography>
         {field('shopName', 'Shop name', { required: true, sx: { gridColumn: '1 / -1' } })}
         {field('address', 'Address', { multiline: true, minRows: 2, sx: { gridColumn: '1 / -1' } })}

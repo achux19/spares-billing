@@ -1,5 +1,7 @@
 import { amountInWords, fmtDate } from '../../utils/format'
 import type { CreditNoteFull } from '../../api/types'
+import A4Header from '../../components/A4Header'
+import PrintLogo from '../../components/PrintLogo'
 
 const n2 = (n: number | null | undefined) => (n ?? 0).toFixed(2)
 
@@ -11,6 +13,7 @@ export default function PrintableCreditNote({ cn, mode }: { cn: CreditNoteFull; 
     return (
       <div className="receipt">
         <style>{'@page { size: 80mm auto; margin: 2mm; }'}</style>
+        <PrintLogo height={16} />
         <div className="center" style={{ fontWeight: 700, fontSize: 14 }}>{cn.shop.shopName}</div>
         <div className="center">{cn.shop.address}</div>
         {cn.shop.gstin && <div className="center">GSTIN: {cn.shop.gstin}</div>}
@@ -57,13 +60,7 @@ export default function PrintableCreditNote({ cn, mode }: { cn: CreditNoteFull; 
   return (
     <div className="a4">
       <style>{'@page { size: A4; margin: 12mm; }'}</style>
-      <div className="center" style={{ fontSize: 18, fontWeight: 700 }}>CREDIT NOTE</div>
-      <div className="center" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{cn.shop.shopName}</div>
-      <div className="center">{cn.shop.address}</div>
-      <div className="center">
-        {[cn.shop.phone && `Ph: ${cn.shop.phone}`, cn.shop.gstin && `GSTIN: ${cn.shop.gstin}`,
-          cn.shop.stateName && `State: ${cn.shop.stateName}`].filter(Boolean).join('   |   ')}
-      </div>
+      <A4Header title="CREDIT NOTE" shop={cn.shop} />
 
       <table style={{ marginTop: 10 }}>
         <tbody>

@@ -1,5 +1,7 @@
 import { amountInWords, fmtDate } from '../../utils/format'
 import type { InvoiceFull } from '../../api/types'
+import A4Header from '../../components/A4Header'
+import PrintLogo from '../../components/PrintLogo'
 
 const n2 = (n: number | null | undefined) => (n ?? 0).toFixed(2)
 
@@ -19,6 +21,7 @@ ewayNo?: string | null
       <div className="receipt">
         <style>{'@page { size: 80mm auto; margin: 2mm; }'}</style>
         {cancelled && <div className="watermark">CANCELLED</div>}
+        <PrintLogo height={16} />
         <div className="center" style={{ fontWeight: 700, fontSize: 14 }}>{inv.shop.shopName}</div>
         <div className="center">{inv.shop.address}</div>
         {inv.shop.phone && <div className="center">Ph: {inv.shop.phone}</div>}
@@ -70,15 +73,7 @@ ewayNo?: string | null
     <div className="a4">
       <style>{'@page { size: A4; margin: 12mm; }'}</style>
       {cancelled && <div className="watermark">CANCELLED</div>}
-      <div className="center" style={{ fontSize: 18, fontWeight: 700 }}>
-        {inv.shop.gstin ? 'TAX INVOICE' : 'INVOICE'}
-      </div>
-      <div className="center" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{inv.shop.shopName}</div>
-      <div className="center">{inv.shop.address}</div>
-      <div className="center">
-        {[inv.shop.phone && `Ph: ${inv.shop.phone}`, inv.shop.gstin && `GSTIN: ${inv.shop.gstin}`,
-          inv.shop.stateName && `State: ${inv.shop.stateName}`].filter(Boolean).join('   |   ')}
-      </div>
+      <A4Header title={inv.shop.gstin ? 'TAX INVOICE' : 'INVOICE'} shop={inv.shop} />
 
       <table style={{ marginTop: 10 }}>
         <tbody>

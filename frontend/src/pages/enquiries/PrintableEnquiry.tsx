@@ -1,5 +1,6 @@
 import type { EnquiryFull, ShopSettings } from '../../api/types'
 import { fmtDate } from '../../utils/format'
+import PrintLogo from '../../components/PrintLogo'
 
 /** Supplier enquiry: only part number, description and quantity. No prices. */
 export default function PrintableEnquiry({ e, shop }: { e: EnquiryFull; shop: ShopSettings | undefined }) {
@@ -8,6 +9,7 @@ export default function PrintableEnquiry({ e, shop }: { e: EnquiryFull; shop: Sh
       <style>{'@page { size: A4 portrait; margin: 12mm; }'}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div>
+          <PrintLogo align="left" />
           <div style={{ fontSize: 20, fontWeight: 700 }}>{shop?.shopName}</div>
           <div style={{ whiteSpace: 'pre-wrap' }}>{shop?.address}{shop?.pincode ? ` - ${shop.pincode}` : ''}</div>
           <div>{[shop?.phone && `Ph: ${shop.phone}`, shop?.gstin && `GSTIN: ${shop.gstin}`].filter(Boolean).join('   |   ')}</div>

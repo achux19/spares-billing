@@ -1,5 +1,6 @@
 import { amountInWords, fmtDate } from '../../utils/format'
 import type { QuotationFull } from '../../api/types'
+import PrintLogo from '../../components/PrintLogo'
 
 const n2 = (n: number | null | undefined) => (n ?? 0).toFixed(2)
 
@@ -16,6 +17,7 @@ export default function PrintableQuotation({ q }: { q: QuotationFull }) {
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div>
+          <PrintLogo align="left" />
           <div style={{ fontSize: 20, fontWeight: 700 }}>{q.shop.shopName}</div>
           <div style={{ whiteSpace: 'pre-wrap' }}>{q.shop.address}{q.shop.pincode ? ` - ${q.shop.pincode}` : ''}</div>
           <div>

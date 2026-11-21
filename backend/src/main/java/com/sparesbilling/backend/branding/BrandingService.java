@@ -55,6 +55,48 @@ public class BrandingService {
         return BrandingResponse.from(b);
     }
 
+    private static final int MAX_LOGO_BYTES = 300 * 1024;
+
+    /** Logo printed on every PDF. PNG, JPG or WEBP only (no SVG: it can carry scripts). */
+    @Transactional
+    public BrandingResponse setLogo(MultipartFile file) {
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("Choose an image first");
+        if (file.getSize() > MAX_LOGO_BYTES) throw new IllegalArgumentException("Logo must be 300 KB or smaller");
+        byte[] data;
+        try {
+            data = file.getBytes();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read the file");
+        }
+        String type = detectType(data);
+        if (type == null || type.equals("image/x-icon")) throw new IllegalArgumentException("Use a PNG, JPG or WEBP image");
+        Branding b = find();
+        b.setLogoData(data);
+        b.setLogoType(type);
+        b.setUpdatedAt(LocalDateTime.now());
+        return BrandingResponse.from(b);
+    }
+
+    @Transactional
+    public BrandingResponse setLogoSize(int heightMm, int widthMm) {
+        if (heightMm < 8 || heightMm > 50) throw new IllegalArgumentException("Logo height must be between 8 and 50 mm");
+        if (widthMm < 15 || widthMm > 120) throw new IllegalArgumentException("Logo width must be between 15 and 120 mm");
+        Branding b = find();
+        b.setLogoWidthMm(widthMm);
+        b.setLogoHeightMm(heightMm);
+        b.setUpdatedAt(LocalDateTime.now());
+        return BrandingResponse.from(b);
+    }
+
+    @Transactional
+    public BrandingResponse clearLogo() {
+        Branding b = find();
+        b.setLogoData(null);
+        b.setLogoType(null);
+        b.setUpdatedAt(LocalDateTime.now());
+        return BrandingResponse.from(b);
+    }
+
     @Transactional
     public BrandingResponse clearFavicon() {
         Branding b = find();

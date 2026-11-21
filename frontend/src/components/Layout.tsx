@@ -9,7 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu'
 import AddIcon from '@mui/icons-material/Add'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import { useAuth } from '../auth/AuthContext'
-import { faviconUrl, useBranding } from '../hooks/useBranding'
+import { useBranding, useFavicon, useLogo } from '../hooks/useBranding'
 import PasswordGate from './PasswordGate'
 import { useFeatures } from '../hooks/useFeatures'
 
@@ -92,6 +92,8 @@ export default function Layout() {
   const theme = useTheme()
   const mobile = useMediaQuery(theme.breakpoints.down('md'))
   const { data: branding } = useBranding()
+  const favicon = useFavicon()
+  useLogo() // load the print logo once, so printing never waits for it
   const [drawer, setDrawer] = useState(false)
   const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null)
 
@@ -111,7 +113,7 @@ export default function Layout() {
           )}
           <Box onClick={() => go('/')} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', mr: 2 }}>
             {branding?.hasFavicon && (
-              <Box component="img" src={faviconUrl(branding)} alt="" sx={{ width: 28, height: 28, borderRadius: 1 }} />
+              <Box component="img" src={favicon ?? ''} alt="" sx={{ width: 28, height: 28, borderRadius: 1 }} />
             )}
             <Typography variant="h6" noWrap sx={{ fontWeight: 800, color: 'primary.main', maxWidth: { xs: 160, md: 260 } }}>
               {appName}

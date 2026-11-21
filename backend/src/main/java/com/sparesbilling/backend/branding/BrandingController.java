@@ -33,6 +33,35 @@ public class BrandingController {
                 .body(b.getFaviconData());
     }
 
+    /** Needs a login (it is the shop's own logo). The app fetches it once and keeps it for printing. */
+    @GetMapping("/logo")
+    public ResponseEntity<byte[]> logo() {
+        Branding b = service.find();
+        if (b.getLogoData() == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(b.getLogoType()))
+                .cacheControl(CacheControl.noCache().cachePrivate())
+                .body(b.getLogoData());
+    }
+
+    @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
+    public BrandingResponse uploadLogo(@RequestParam("file") MultipartFile file) {
+        return service.setLogo(file);
+    }
+
+    @PutMapping("/logo-size")
+    @PreAuthorize("hasRole('OWNER')")
+    public BrandingResponse logoSize(@Valid @RequestBody LogoSizeRequest req) {
+        return service.setLogoSize(req.heightMm(), req.widthMm());
+    }
+
+    @DeleteMapping("/logo")
+    @PreAuthorize("hasRole('OWNER')")
+    public BrandingResponse clearLogo() {
+        return service.clearLogo();
+    }
+
     @PutMapping
     @PreAuthorize("hasRole('OWNER')")
     public BrandingResponse rename(@Valid @RequestBody BrandingRequest req) {

@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { faviconUrl, useBranding } from '../hooks/useBranding'
+import { useBranding, useFavicon } from '../hooks/useBranding'
 
 export default function BrandingEffect() {
   const { data } = useBranding()
+  const icon = useFavicon()
   useEffect(() => {
     if (!data) return
     document.title = data.appName
@@ -14,7 +15,7 @@ export default function BrandingEffect() {
       document.head.appendChild(link)
     }
     link.removeAttribute('type')
-    link.href = data.hasFavicon ? faviconUrl(data) : 'data:,'
-  }, [data])
+    link.href = data.hasFavicon && icon ? icon : 'data:,'
+  }, [data, icon])
   return null
 }

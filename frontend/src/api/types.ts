@@ -443,6 +443,9 @@ export interface AppUser {
 export interface Branding {
   appName: string
   hasFavicon: boolean
+  hasLogo: boolean
+  logoHeightMm: number
+  logoWidthMm: number
   version: number
 }
 export interface EnquiryLine {

@@ -3,11 +3,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Alert, Box, Button, Paper, TextField, Typography } from '@mui/material'
 import { api, errorMessage } from '../../api/client'
 import type { Branding } from '../../api/types'
-import { faviconUrl, useBranding } from '../../hooks/useBranding'
+import { useBranding, useFavicon } from '../../hooks/useBranding'
 
 export default function BrandingCard() {
   const qc = useQueryClient()
   const { data } = useBranding()
+  const favicon = useFavicon()
   const [name, setName] = useState('')
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -63,8 +64,8 @@ export default function BrandingCard() {
       </Box>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <Box sx={{ width: 48, height: 48, border: 1, borderColor: 'divider', borderRadius: 1, display: 'grid', placeItems: 'center' }}>
-          {data?.hasFavicon
-            ? <img src={faviconUrl(data)} alt="icon" style={{ maxWidth: 40, maxHeight: 40 }} />
+          {data?.hasFavicon && favicon
+            ? <img src={favicon} alt="icon" style={{ maxWidth: 40, maxHeight: 40 }} />
             : <Typography variant="caption" color="text.secondary">none</Typography>}
         </Box>
         <input ref={fileRef} type="file" hidden accept="image/png,image/jpeg,image/webp,image/x-icon,.ico"

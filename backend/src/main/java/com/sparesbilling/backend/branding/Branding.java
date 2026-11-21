@@ -33,6 +33,18 @@ public class Branding implements TenantOwned {
     @Column(name = "favicon_type", length = 50)
     private String faviconType;
 
+    @Column(name = "logo_data", columnDefinition = "bytea")
+    private byte[] logoData;
+
+    @Column(name = "logo_type", length = 50)
+    private String logoType;
+
+    @Column(name = "logo_height_mm", nullable = false)
+    private int logoHeightMm = 18;
+
+    @Column(name = "logo_width_mm", nullable = false)
+    private int logoWidthMm = 60;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
